@@ -34,7 +34,7 @@ def moveaxis(
     return tf.experimental.numpy.moveaxis(a, source, destination)
 
 
-@with_unsupported_dtypes({"2.14.0 and below": ("bfloat16",)}, backend_version)
+@with_unsupported_dtypes({"2.15.0 and below": ("bfloat16",)}, backend_version)
 def heaviside(
     x1: Union[tf.Tensor, tf.Variable],
     x2: Union[tf.Tensor, tf.Variable],
@@ -85,7 +85,7 @@ def rot90(
     return tf.experimental.numpy.rot90(m, k, axes)
 
 
-@with_unsupported_dtypes({"2.14.0 and below": ("unsigned", "complex")}, backend_version)
+@with_unsupported_dtypes({"2.15.0 and below": ("unsigned", "complex")}, backend_version)
 def top_k(
     x: tf.Tensor,
     k: int,
@@ -127,7 +127,7 @@ def fliplr(
     return tf.experimental.numpy.fliplr(m)
 
 
-@with_unsupported_dtypes({"2.14.0 and below": ("bfloat16",)}, backend_version)
+@with_unsupported_dtypes({"2.15.0 and below": ("bfloat16",)}, backend_version)
 def i0(
     x: Union[tf.Tensor, tf.Variable],
     /,
@@ -294,11 +294,9 @@ def pad(
     **kwargs: Optional[Any],
 ) -> Union[tf.Tensor, tf.Variable]:
     pad_width = _to_tf_padding(pad_width, len(input.shape))
-    if not isinstance(pad_width, (tf.Variable, tf.Tensor)):
-        pad_width = tf.constant(pad_width)
-    constant_values = tf.constant(constant_values)
-    if constant_values.dtype != input.dtype:
-        constant_values = tf.cast(constant_values, input.dtype)
+    if isinstance(constant_values, (tf.Variable, tf.Tensor)):
+        if constant_values.dtype != input.dtype:
+            constant_values = tf.cast(constant_values, input.dtype)
     return tf.pad(
         input,
         pad_width,

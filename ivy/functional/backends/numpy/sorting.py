@@ -42,7 +42,7 @@ def sort(
 
 
 # msort
-@with_unsupported_dtypes({"1.26.2 and below": ("complex",)}, backend_version)
+@with_unsupported_dtypes({"1.26.3 and below": ("complex",)}, backend_version)
 def msort(
     a: Union[np.ndarray, list, tuple], /, *, out: Optional[np.ndarray] = None
 ) -> np.ndarray:
@@ -62,7 +62,7 @@ def searchsorted(
     ret_dtype: np.dtype = np.int64,
     out: Optional[np.ndarray] = None,
 ) -> np.ndarray:
-    assert ivy.is_int_dtype(ret_dtype), ValueError(
+    assert ivy.is_int_dtype(ret_dtype), TypeError(
         "only Integer data types are supported for ret_dtype."
     )
     is_sorter_provided = sorter is not None

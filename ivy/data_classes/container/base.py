@@ -1155,7 +1155,7 @@ class ContainerBase(dict, abc.ABC):
             ),
         )
         container_dict = {}
-        if type(h5_obj_or_filepath) is str:
+        if isinstance(h5_obj_or_filepath, str):
             h5_obj = h5py.File(h5_obj_or_filepath, "r")
         else:
             h5_obj = h5_obj_or_filepath
@@ -1238,14 +1238,14 @@ class ContainerBase(dict, abc.ABC):
                 "the size of hdf5 files."
             ),
         )
-        if type(h5_obj_or_filepath) is str:
+        if isinstance(h5_obj_or_filepath, str):
             h5_obj = h5py.File(h5_obj_or_filepath, "r")
         else:
             h5_obj = h5_obj_or_filepath
 
         size = 0
         batch_size = 0
-        for key, value in h5_obj.items():
+        for value in h5_obj.values():
             if isinstance(value, h5py.Group):
                 size_to_add, batch_size = ivy.Container.h5_file_size(value)
                 size += size_to_add
@@ -1280,12 +1280,12 @@ class ContainerBase(dict, abc.ABC):
         )
         if seed_value is None:
             seed_value = random.randint(0, 1000)
-        if type(h5_obj_or_filepath) is str:
+        if isinstance(h5_obj_or_filepath, str):
             h5_obj = h5py.File(h5_obj_or_filepath, "a")
         else:
             h5_obj = h5_obj_or_filepath
 
-        for key, value in h5_obj.items():
+        for value in h5_obj.values():
             if isinstance(value, h5py.Group):
                 ivy.Container.shuffle_h5_file(value, seed_value)
             elif isinstance(value, h5py.Dataset):
@@ -1367,15 +1367,17 @@ class ContainerBase(dict, abc.ABC):
         if below_depth and num_keys > below_depth:
             pre_keys = flat_keys[0:below_depth]
             del flat_keys[0:below_depth]
-        return "/".join([
-            k
-            for k in [
-                "/".join(pre_keys),
-                replacement.join(flat_keys),
-                "/".join(post_keys),
+        return "/".join(
+            [
+                k
+                for k in [
+                    "/".join(pre_keys),
+                    replacement.join(flat_keys),
+                    "/".join(post_keys),
+                ]
+                if k
             ]
-            if k
-        ])
+        )
 
     @staticmethod
     def cont_trim_key(key, max_length):
@@ -1488,9 +1490,9 @@ class ContainerBase(dict, abc.ABC):
         if not sub_shapes:
             return sub_shapes
         min_num_dims = min(len(sub_shape) for sub_shape in sub_shapes)
-        sub_shapes_array = np.asarray([
-            sub_shape[0:min_num_dims] for sub_shape in sub_shapes
-        ])
+        sub_shapes_array = np.asarray(
+            [sub_shape[0:min_num_dims] for sub_shape in sub_shapes]
+        )
         sub_shapes_array = np.where(sub_shapes_array == 0, -1, sub_shapes_array)
         mask = np.prod(sub_shapes_array / sub_shapes_array[0:1], 0) == 1
         # noinspection PyTypeChecker
@@ -1697,16 +1699,18 @@ class ContainerBase(dict, abc.ABC):
             Boolean, whether all entries are boolean True.
         """
         return bool(
-            np.prod([
-                v
-                for k, v in self.cont_as_bools(
-                    assert_is_bool,
-                    key_chains,
-                    to_apply,
-                    prune_unapplied,
-                    map_sequences,
-                ).cont_to_iterator()
-            ])
+            np.prod(
+                [
+                    v
+                    for k, v in self.cont_as_bools(
+                        assert_is_bool,
+                        key_chains,
+                        to_apply,
+                        prune_unapplied,
+                        map_sequences,
+                    ).cont_to_iterator()
+                ]
+            )
         )
 
     def cont_all_false(
@@ -1742,16 +1746,18 @@ class ContainerBase(dict, abc.ABC):
             Boolean, whether all entries are boolean False.
         """
         return not bool(
-            np.sum([
-                v
-                for k, v in self.cont_as_bools(
-                    assert_is_bool,
-                    key_chains,
-                    to_apply,
-                    prune_unapplied,
-                    map_sequences,
-                ).cont_to_iterator()
-            ])
+            np.sum(
+                [
+                    v
+                    for k, v in self.cont_as_bools(
+                        assert_is_bool,
+                        key_chains,
+                        to_apply,
+                        prune_unapplied,
+                        map_sequences,
+                    ).cont_to_iterator()
+                ]
+            )
         )
 
     def cont_slice_via_key(self, slice_key):
@@ -2001,7 +2007,7 @@ class ContainerBase(dict, abc.ABC):
                 "containers to disk as hdf5 files."
             ),
         )
-        if type(h5_obj_or_filepath) is str:
+        if isinstance(h5_obj_or_filepath, str):
             h5_obj = h5py.File(h5_obj_or_filepath, mode)
         else:
             h5_obj = h5_obj_or_filepath
@@ -2164,7 +2170,7 @@ class ContainerBase(dict, abc.ABC):
             Iterator for the container values.
 
         """
-        for key, value in self.items():
+        for value in self.values():
             if isinstance(value, ivy.Container) and (not include_empty or value):
                 # noinspection PyCompatibility
                 yield from value.cont_to_iterator_values(include_empty)
@@ -3657,9 +3663,9 @@ class ContainerBase(dict, abc.ABC):
         # prepend these lines to the sub-container
         sub_repr = (
             "\n"
-            + "\n".join([
-                " " * num_spaces_to_add + s for s in sub_repr[1:-1].split("\n")
-            ])
+            + "\n".join(
+                [" " * num_spaces_to_add + s for s in sub_repr[1:-1].split("\n")]
+            )
             + "\n"
         )
 
@@ -3694,10 +3700,12 @@ class ContainerBase(dict, abc.ABC):
                 padded = True
                 return "\\n" + indent_str + indented_key_str + str_in
 
-            leading_str_to_keep = ", ".join([
-                _pre_pad_alpha_line(s) if s[0].isalpha() and i != 0 else s
-                for i, s in enumerate(leading_str_to_keep.split(", "))
-            ])
+            leading_str_to_keep = ", ".join(
+                [
+                    _pre_pad_alpha_line(s) if s[0].isalpha() and i != 0 else s
+                    for i, s in enumerate(leading_str_to_keep.split(", "))
+                ]
+            )
             local_indent_str = "" if padded else indent_str
             leading_str = leading_str_to_keep.split("\\n")[-1].replace('"', "")
             remaining_str = array_str_in_split[1]
@@ -3714,30 +3722,32 @@ class ContainerBase(dict, abc.ABC):
             uniform_indent_wo_overflow_list = list(
                 filter(None, uniform_indent_wo_overflow.split("\\n"))
             )
-            uniform_indent = "\n".join([
-                (
-                    local_indent_str + extra_indent + " " + s
-                    if (
-                        s[0].isnumeric()
-                        or s[0] == "-"
-                        or s[0:3] == "..."
-                        or max(ss in s[0:6] for ss in ["nan, ", "inf, "])
+            uniform_indent = "\n".join(
+                [
+                    (
+                        local_indent_str + extra_indent + " " + s
+                        if (
+                            s[0].isnumeric()
+                            or s[0] == "-"
+                            or s[0:3] == "..."
+                            or max(ss in s[0:6] for ss in ["nan, ", "inf, "])
+                        )
+                        else (
+                            indent_str + indented_key_str + s
+                            if (not s[0].isspace() and s[0] != '"')
+                            else s
+                        )
                     )
-                    else (
-                        indent_str + indented_key_str + s
-                        if (not s[0].isspace() and s[0] != '"')
-                        else s
-                    )
-                )
-                for s in uniform_indent_wo_overflow_list
-            ])
+                    for s in uniform_indent_wo_overflow_list
+                ]
+            )
             indented = uniform_indent
             # 10 dimensions is a sensible upper bound for the number in a single array
             for i in range(2, 10):
                 indented = indented.replace(" " * (i - 1) + "[" * i, "[" * i)
-                indented = "\n".join([
-                    s for s in indented.split("\n") if bool(s) and not s.isspace()
-                ])
+                indented = "\n".join(
+                    [s for s in indented.split("\n") if bool(s) and not s.isspace()]
+                )
             return indented
 
         def _align_arrays(str_in):
@@ -3836,27 +3846,32 @@ class ContainerBase(dict, abc.ABC):
             def _add_newline(str_in):
                 str_in_split = str_in.split("\n")
                 str_split_size = len(str_in_split)
-                return "\n".join([
-                    (
-                        ("\n" * self._print_line_spacing + ss)
-                        if i == (str_split_size - 1)
-                        else ss
-                    )
-                    for i, ss in enumerate(str_in_split)
-                ])
+                return "\n".join(
+                    [
+                        (
+                            ("\n" * self._print_line_spacing + ss)
+                            if i == (str_split_size - 1)
+                            else ss
+                        )
+                        for i, ss in enumerate(str_in_split)
+                    ]
+                )
 
-            json_dumped_str = '":'.join([
-                _add_newline(s) for s in json_dumped_str.split('":')
-            ])
+            json_dumped_str = '":'.join(
+                [_add_newline(s) for s in json_dumped_str.split('":')]
+            )
             # improve tf formatting
             if ivy.backend_stack and ivy.current_backend_str() == "tensorflow":
                 json_dumped_str_split = json_dumped_str.split("'Variable:")
                 json_dumped_str = (
                     json_dumped_str_split[0]
                     + ", "
-                    + ", ".join([
-                        "'".join(ss.split("'")[1:]) for ss in json_dumped_str_split[1:]
-                    ])
+                    + ", ".join(
+                        [
+                            "'".join(ss.split("'")[1:])
+                            for ss in json_dumped_str_split[1:]
+                        ]
+                    )
                 )
                 json_dumped_str = (
                     json_dumped_str.replace(":shape", ", shape")
@@ -3867,24 +3882,26 @@ class ContainerBase(dict, abc.ABC):
             # color keys
             json_dumped_str_split = json_dumped_str.split('":')
             split_size = len(json_dumped_str_split)
-            json_dumped_str = '":'.join([
-                (
-                    ' "'.join(
-                        sub_str.split(' "')[:-1]
-                        + [
-                            termcolor.colored(
-                                ivy.Container.cont_trim_key(
-                                    sub_str.split(' "')[-1], self._key_length_limit
-                                ),
-                                self._default_key_color,
-                            )
-                        ]
+            json_dumped_str = '":'.join(
+                [
+                    (
+                        ' "'.join(
+                            sub_str.split(' "')[:-1]
+                            + [
+                                termcolor.colored(
+                                    ivy.Container.cont_trim_key(
+                                        sub_str.split(' "')[-1], self._key_length_limit
+                                    ),
+                                    self._default_key_color,
+                                )
+                            ]
+                        )
+                        if i < split_size - 1
+                        else sub_str
                     )
-                    if i < split_size - 1
-                    else sub_str
-                )
-                for i, sub_str in enumerate(json_dumped_str_split)
-            ])
+                    for i, sub_str in enumerate(json_dumped_str_split)
+                ]
+            )
             # remove quotation marks, shape tuple, and color other elements of the dict
             ret = (
                 json_dumped_str.replace('"', "")
